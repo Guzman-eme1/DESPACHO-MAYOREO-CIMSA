@@ -6,62 +6,33 @@
     <title>Portal de Despachos CIMSA</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .header { background: #001529; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
-        .buscador { width: 100%; padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-sizing: border-box; }
-        .ruta-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 6px solid #1890ff; shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .transporte { font-size: 1.2em; color: #1890ff; font-weight: bold; }
-        .estado { display: inline-block; padding: 5px 10px; border-radius: 5px; font-size: 0.9em; margin-top: 5px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
+        .header { background: #001529; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .buscador { width: 100%; padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-sizing: border-box; outline: none; }
+        .buscador:focus { border-color: #1890ff; box-shadow: 0 0 5px rgba(24,144,255,0.5); }
+        #contenedor-rutas { display: grid; gap: 15px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+        .ruta-card { background: white; padding: 20px; border-radius: 12px; border-left: 6px solid #1890ff; shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .ruta-card:hover { transform: translateY(-3px); }
+        .transporte { font-size: 1.3em; color: #1890ff; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; }
+        .dato { margin-bottom: 5px; font-size: 1em; color: #333; }
+        .dato strong { color: #555; }
+        .pedido { background: #e6f7ff; padding: 8px; border-radius: 5px; font-size: 0.85em; margin-top: 10px; border: 1px dashed #91d5ff; }
+        .loading { text-align: center; font-size: 1.2em; color: #666; padding: 50px; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>DESPACHO MAYOREO CIMSA</h1>
-        <p>Consulta de rutas en tiempo real</p>
+        <p>Consulta de rutas y pilotos en tiempo real</p>
     </div>
 
-    <input type="text" id="busqueda" class="buscador" placeholder="Busca tu placa o transporte..." onkeyup="filtrar()">
+    <input type="text" id="busqueda" class="buscador" placeholder="Busca por Piloto, Transporte o Pedido..." onkeyup="filtrar()">
     
-    <div id="contenedor-rutas">Cargando datos...</div>
+    <div id="contenedor-rutas" class="loading">Conectando con el servidor de datos...</div>
 
     <script>
-        // Aquí pegaremos luego el link de tu Google Sheets
-        const public_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_PQvvyHOSvSE4b0X8oBKUPEbe4gva0hOPJND2FNrIZs16Vl_7I4jRlPaPCAYumOFzMaPRc4ebpJeG/pub?output=csv';
+        // PEGA AQUÍ TU LINK DE GOOGLE SHEETS (DEBE TERMINAR EN output=csv)
+        const public_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_PQvvyHOsvSE4b0X8oBKUPEbe4gva0hOPJND2FNrIZs16V1_7I4jR1PaPCAYumOFzMaPRc4ebpJeG/pub?output=csv';
 
         function init() {
-            Papa.parse(public_url, {
-                download: true, header: true,
-                complete: function(results) { mostrarDatos(results.data); }
-            });
-        }
-
-   function mostrarDatos(data) {
-            let html = '';
-            data.forEach(fila => {
-                // Filtramos para que solo muestre filas que tengan un Piloto o Transporte real
-                // Ignoramos los títulos como "DESPACHO..." o filas vacías
-                const tienePiloto = fila.PILOTO || fila.No; 
-                const noEsTitulo = !fila.PILOTO?.includes('DESPACHO');
-
-                if(tienePiloto && noEsTitulo && fila.PILOTO !== 'PILOTO') {
-                    html += `
-                    <div class="ruta-card">
-                        <div class="transporte">🚛 ${fila.TRANSPORTE || fila.No || '---'}</div>
-                        <div><strong>Piloto:</strong> ${fila.PILOTO || '---'}</div>
-                        <div><strong>Equipo (EQ):</strong> ${fila.EQ || '---'}</div>
-                        <div><strong>Código Facility:</strong> ${fila['CODIGO FACILITY'] || '---'}</div>
-                        <div><strong>Consolidado ERP:</strong> ${fila['CONSOLIDADO ERP'] || '---'}</div>
-                        <div style="margin-top:5px; font-size: 0.8em; color: #666;">
-                            <strong># Pedidos:</strong> ${fila['# DE PEDIDO'] || '---'}
-                        </div>
-                    </div>`;
-                }
-            });
-            
-            if (html === '') {
-                document.getElementById('contenedor-rutas').innerHTML = "No hay despachos programados por ahora.";
-            } else {
-                document.getElementById('contenedor-rutas').innerHTML = html;
-            }
-        }ntenedor-rutas').innerHTML = html;
-        }
+            Papa.parse(
