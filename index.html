@@ -34,5 +34,53 @@
         // PEGA AQUÍ TU LINK DE GOOGLE SHEETS (DEBE TERMINAR EN output=csv)
         const public_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_PQvvyHOSvSE4b0X8oBKUPEbe4gva0hOPJND2FNrIZs16Vl_7I4jRlPaPCAYumOFzMaPRc4ebpJeG/pub?output=csv';
 
-        function init() {
-            Papa.parse(
+       function init() {
+            Papa.parse(public_url, {
+                download: true,
+                header: false,
+                complete: function(results) {
+                    procesarDatosFlexibles(results.data);
+                },
+                error: function() {
+                    document.getElementById('contenedor-rutas').innerHTML = "Error al conectar con los datos.";
+                }
+            });
+        }
+
+        function procesarDatosFlexibles(filas) {
+            let html = '';
+            filas.forEach((fila) => {
+                const piloto = fila[2] || '';
+                const transporte = fila[1] || '';
+                
+                if (piloto && !piloto.includes('DESPACHO') && piloto !== 'PILOTO' && piloto !== 'EQ') {
+                    html += `
+                    <div class="ruta-card">
+                        <div class="transporte">🚛 ${transporte}</div>
+                        <div class="dato"><strong>Piloto:</strong> ${piloto}</div>
+                        <div class="dato"><strong>Equipo (EQ):</strong> ${fila[3] || '---'}</div>
+                        <div class="dato"><strong>Facility:</strong> ${fila[4] || '---'}</div>
+                        <div class="dato"><strong>Consolidado:</strong> ${fila[5] || '---'}</div>
+                        <div class="pedido"><strong># Pedidos:</strong><br>${fila[6] || '---'}</div>
+                    </div>`;
+                }
+            });
+
+            const contenedor = document.getElementById('contenedor-rutas');
+            contenedor.classList.remove('loading');
+            contenedor.innerHTML = html || "No se encontraron despachos activos.";
+        }
+
+        function filtrar() {
+            let filtro = document.getElementById('busqueda').value.toUpperCase();
+            let cards = document.getElementsByClassName('ruta-card');
+            for (let i = 0; i < cards.length; i++) {
+                let texto = cards[i].innerText.toUpperCase();
+                cards[i].style.display = texto.indexOf(filtro) > -1 ? "" : "none";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
