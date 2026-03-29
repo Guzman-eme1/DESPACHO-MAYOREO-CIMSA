@@ -35,7 +35,7 @@
 
     <script>
         // EL ENLACE DE TU EXCEL (Actualizado con prevencion de cache)
-        const public_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_PQvvyHOsvSE4b0X8oBKUPEbe4gva0hOPJND2FNrIZs16V1_7I4jR1PaPCAYumOFzMaPRc4ebpJeG/pub?output=csv&cache=' + new Date().getTime();
+        const public_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_PQvvyHOsvSE4b0X8oBKUPEbe4gva0hOPJND2FNrIZs16V1_7I4jR1PaPCAYumOFzMaPRc4ebpJeG/pub?output=csv' + '&cache=' + new Date().getTime();
 
         function init() {
             Papa.parse(public_url, {
