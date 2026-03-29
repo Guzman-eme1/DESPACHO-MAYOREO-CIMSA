@@ -8,67 +8,90 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
         .header { background: #001529; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .buscador { width: 100%; padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-sizing: border-box; outline: none; }
-        .buscador:focus { border-color: #1890ff; box-shadow: 0 0 5px rgba(24,144,255,0.5); }
-        #contenedor-rutas { display: grid; gap: 15px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-        .ruta-card { background: white; padding: 20px; border-radius: 12px; border-left: 6px solid #1890ff; shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .ruta-card:hover { transform: translateY(-3px); }
-        .transporte { font-size: 1.3em; color: #1890ff; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; }
-        .dato { margin-bottom: 5px; font-size: 1em; color: #333; }
-        .dato strong { color: #555; }
-        .pedido { background: #e6f7ff; padding: 8px; border-radius: 5px; font-size: 0.85em; margin-top: 10px; border: 1px dashed #91d5ff; }
-        .loading { text-align: center; font-size: 1.2em; color: #666; padding: 50px; }
+        .buscador { width: 100%; padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        .buscador:focus { border-color: #1890ff; box-shadow: 0 0 8px rgba(24,144,255,0.3); }
+        #contenedor-rutas { display: grid; gap: 15px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+        .ruta-card { background: white; padding: 20px; border-radius: 12px; border-left: 6px solid #1890ff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; }
+        .ruta-card:hover { transform: translateY(-4px); }
+        .fecha-tag { font-size: 0.85em; color: #1890ff; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .transporte { font-size: 1.25em; color: #333; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .dato { margin-bottom: 6px; font-size: 0.95em; color: #444; }
+        .dato strong { color: #222; min-width: 100px; display: inline-block; }
+        .seccion-entrega { background: #f8f9fa; padding: 10px; border-radius: 8px; margin: 12px 0; border: 1px solid #edf2f7; }
+        .pedido { background: #e6f7ff; padding: 10px; border-radius: 6px; font-size: 0.85em; margin-top: 10px; border: 1px dashed #91d5ff; color: #0050b3; word-break: break-all; }
+        .loading { text-align: center; font-size: 1.2em; color: #666; padding: 50px; grid-column: 1 / -1; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>DESPACHO MAYOREO CIMSA</h1>
         <p>Consulta de rutas y pilotos en tiempo real</p>
+        <div id="reloj" style="margin-top:10px; font-size: 0.9em; opacity: 0.9;">Cargando sistema...</div>
     </div>
 
-    <input type="text" id="busqueda" class="buscador" placeholder="Busca por Piloto, Transporte o Pedido..." onkeyup="filtrar()">
+    <input type="text" id="busqueda" class="buscador" placeholder="🔍 Busca por Piloto, Transporte, Cliente o Destino..." onkeyup="filtrar()">
     
     <div id="contenedor-rutas" class="loading">Conectando con el servidor de datos...</div>
 
     <script>
-        // PEGA AQUÍ TU LINK DE GOOGLE SHEETS (DEBE TERMINAR EN output=csv)
-        const public_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_PQvvyHOSvSE4b0X8oBKUPEbe4gva0hOPJND2FNrIZs16Vl_7I4jRlPaPCAYumOFzMaPRc4ebpJeG/pub?output=csv';
+        // EL ENLACE DE TU EXCEL (Actualizado con prevencion de cache)
+        const public_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_PQvvyHOsvSE4b0X8oBKUPEbe4gva0hOPJND2FNrIZs16V1_7I4jR1PaPCAYumOFzMaPRc4ebpJeG/pub?output=csv&cache=' + new Date().getTime();
 
-       function init() {
+        function init() {
             Papa.parse(public_url, {
                 download: true,
                 header: false,
                 complete: function(results) {
-                    procesarDatosFlexibles(results.data);
+                    procesarDatos(results.data);
                 },
                 error: function() {
-                    document.getElementById('contenedor-rutas').innerHTML = "Error al conectar con los datos.";
+                    document.getElementById('contenedor-rutas').innerHTML = "⚠️ Error al conectar con el archivo. Revisa la publicación en el Excel.";
                 }
             });
         }
 
-        function procesarDatosFlexibles(filas) {
+        function procesarDatos(filas) {
             let html = '';
             filas.forEach((fila) => {
-                const piloto = fila[2] || '';
-                const transporte = fila[1] || '';
+                // MAPEÓ DE COLUMNAS (A=0, B=1, C=2, etc.)
+                const fecha      = fila[0] || '---';  // Columna A
+                const transporte = fila[1] || '';     // Columna B
+                const piloto     = fila[2] || '';     // Columna C
+                const eq         = fila[3] || '---';  // Columna D
+                const facility   = fila[4] || '---';  // Columna E
+                const erp        = fila[5] || '---';  // Columna F
+                const pedido     = fila[6] || '---';  // Columna G
+                const destino    = fila[14] || '---'; // Columna O
+                const cliente    = fila[15] || '---'; // Columna P
                 
-                if (piloto && !piloto.includes('DESPACHO') && piloto !== 'PILOTO' && piloto !== 'EQ') {
+                // Filtro para ignorar filas vacías o encabezados
+                if (piloto && !piloto.includes('DESPACHO') && piloto !== 'PILOTO' && piloto !== 'FECHA') {
                     html += `
                     <div class="ruta-card">
+                        <div class="fecha-tag">📅 FECHA: ${fecha}</div>
                         <div class="transporte">🚛 ${transporte}</div>
+                        
                         <div class="dato"><strong>Piloto:</strong> ${piloto}</div>
-                        <div class="dato"><strong>Equipo (EQ):</strong> ${fila[3] || '---'}</div>
-                        <div class="dato"><strong>Facility:</strong> ${fila[4] || '---'}</div>
-                        <div class="dato"><strong>Consolidado:</strong> ${fila[5] || '---'}</div>
-                        <div class="pedido"><strong># Pedidos:</strong><br>${fila[6] || '---'}</div>
+                        <div class="dato"><strong>Equipo (EQ):</strong> ${eq}</div>
+                        
+                        <div class="seccion-entrega">
+                            <div class="dato"><strong>📍 Destino:</strong> ${destino}</div>
+                            <div class="dato"><strong>👤 Cliente:</strong> ${cliente}</div>
+                        </div>
+
+                        <div class="dato"><strong>Facility:</strong> ${facility}</div>
+                        <div class="dato"><strong>Consolidado:</strong> ${erp}</div>
+                        
+                        <div class="pedido">
+                            <strong>📦 # Pedidos:</strong><br>${pedido}
+                        </div>
                     </div>`;
                 }
             });
 
             const contenedor = document.getElementById('contenedor-rutas');
             contenedor.classList.remove('loading');
-            contenedor.innerHTML = html || "No se encontraron despachos activos.";
+            contenedor.innerHTML = html || "No se encontraron datos de despacho para mostrar.";
         }
 
         function filtrar() {
@@ -80,7 +103,17 @@
             }
         }
 
+        // Reloj en tiempo real
+        function actualizarReloj() {
+            const ahora = new Date();
+            document.getElementById('reloj').innerHTML = "🕒 Última sincronización: " + ahora.toLocaleTimeString();
+        }
+
+        setInterval(actualizarReloj, 1000);
         window.addEventListener('DOMContentLoaded', init);
+        
+        // Auto-actualizar datos cada 5 minutos
+        setInterval(init, 300000);
     </script>
 </body>
 </html>
