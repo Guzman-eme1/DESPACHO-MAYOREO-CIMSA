@@ -35,20 +35,33 @@
             });
         }
 
-       function mostrarDatos(data) {
+   function mostrarDatos(data) {
             let html = '';
             data.forEach(fila => {
-                // Solo mostramos filas que tengan un transporte asignado
-                if(fila.TRANSPORTE && fila.TRANSPORTE !== 'TRANSPORTE') {
+                // Filtramos para que solo muestre filas que tengan un Piloto o Transporte real
+                // Ignoramos los títulos como "DESPACHO..." o filas vacías
+                const tienePiloto = fila.PILOTO || fila.No; 
+                const noEsTitulo = !fila.PILOTO?.includes('DESPACHO');
+
+                if(tienePiloto && noEsTitulo && fila.PILOTO !== 'PILOTO') {
                     html += `
                     <div class="ruta-card">
-                        <div class="transporte">🚛 ${fila.TRANSPORTE}</div>
-                        <div><strong>Piloto:</strong> ${fila.PILOTO || 'No asignado'}</div>
+                        <div class="transporte">🚛 ${fila.TRANSPORTE || fila.No || '---'}</div>
+                        <div><strong>Piloto:</strong> ${fila.PILOTO || '---'}</div>
                         <div><strong>Equipo (EQ):</strong> ${fila.EQ || '---'}</div>
                         <div><strong>Código Facility:</strong> ${fila['CODIGO FACILITY'] || '---'}</div>
-                        <div><strong>Consolidado:</strong> ${fila['CONSOLIDADO ERP'] || '---'}</div>
+                        <div><strong>Consolidado ERP:</strong> ${fila['CONSOLIDADO ERP'] || '---'}</div>
+                        <div style="margin-top:5px; font-size: 0.8em; color: #666;">
+                            <strong># Pedidos:</strong> ${fila['# DE PEDIDO'] || '---'}
+                        </div>
                     </div>`;
                 }
             });
-            document.getElementById('contenedor-rutas').innerHTML = html;
+            
+            if (html === '') {
+                document.getElementById('contenedor-rutas').innerHTML = "No hay despachos programados por ahora.";
+            } else {
+                document.getElementById('contenedor-rutas').innerHTML = html;
+            }
+        }ntenedor-rutas').innerHTML = html;
         }
