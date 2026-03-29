@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Despachos CIMSA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .header { background: #001529; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
+        .buscador { width: 100%; padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-sizing: border-box; }
+        .ruta-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 6px solid #1890ff; shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .transporte { font-size: 1.2em; color: #1890ff; font-weight: bold; }
+        .estado { display: inline-block; padding: 5px 10px; border-radius: 5px; font-size: 0.9em; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DESPACHO MAYOREO CIMSA</h1>
+        <p>Consulta de rutas en tiempo real</p>
+    </div>
+
+    <input type="text" id="busqueda" class="buscador" placeholder="Busca tu placa o transporte..." onkeyup="filtrar()">
+    
+    <div id="contenedor-rutas">Cargando datos...</div>
+
+    <script>
+        // Aquí pegaremos luego el link de tu Google Sheets
+        const public_url = 'AQUI_IRA_TU_LINK';
+
+        function init() {
+            Papa.parse(public_url, {
+                download: true, header: true,
+                complete: function(results) { mostrarDatos(results.data); }
+            });
+        }
+
+        function mostrarDatos(data) {
+            let html = '';
+            data.forEach(fila => {
+                if(fila.Transporte) {
+                    html += `
+                    <div class="ruta-card">
+                        <div class="transporte">🚛 ${fila.Transporte}</div>
+                        <div><strong>Ruta:</strong> ${fila.Ruta}</div>
+                        <div><strong>Estado:</strong> ${fila.Estado}</div>
+                        <div><small>Salida: ${fila.Hora}</small></div>
+                    </div>`;
+                }
+            });
+            document.getElementById('contenedor-rutas').innerHTML = html;
+        }
+
+        function filtrar() {
+            let filtro = document.getElementById('busqueda').value.toUpperCase();
+            let cards = document.getElementsByClassName('ruta-card');
+            for (let i = 0; i < cards.length; i++) {
+                let texto = cards[i].innerText.toUpperCase();
+                cards[i].style.display = texto.indexOf(filtro) > -1 ? "" : "none";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
