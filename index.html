@@ -35,32 +35,20 @@
             });
         }
 
-        function mostrarDatos(data) {
+       function mostrarDatos(data) {
             let html = '';
             data.forEach(fila => {
-                if(fila.Transporte) {
+                // Solo mostramos filas que tengan un transporte asignado
+                if(fila.TRANSPORTE && fila.TRANSPORTE !== 'TRANSPORTE') {
                     html += `
                     <div class="ruta-card">
-                        <div class="transporte">🚛 ${fila.Transporte}</div>
-                        <div><strong>Ruta:</strong> ${fila.Ruta}</div>
-                        <div><strong>Estado:</strong> ${fila.Estado}</div>
-                        <div><small>Salida: ${fila.Hora}</small></div>
+                        <div class="transporte">🚛 ${fila.TRANSPORTE}</div>
+                        <div><strong>Piloto:</strong> ${fila.PILOTO || 'No asignado'}</div>
+                        <div><strong>Equipo (EQ):</strong> ${fila.EQ || '---'}</div>
+                        <div><strong>Código Facility:</strong> ${fila['CODIGO FACILITY'] || '---'}</div>
+                        <div><strong>Consolidado:</strong> ${fila['CONSOLIDADO ERP'] || '---'}</div>
                     </div>`;
                 }
             });
             document.getElementById('contenedor-rutas').innerHTML = html;
         }
-
-        function filtrar() {
-            let filtro = document.getElementById('busqueda').value.toUpperCase();
-            let cards = document.getElementsByClassName('ruta-card');
-            for (let i = 0; i < cards.length; i++) {
-                let texto = cards[i].innerText.toUpperCase();
-                cards[i].style.display = texto.indexOf(filtro) > -1 ? "" : "none";
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
